@@ -1,0 +1,72 @@
+{
+  "creator": "Yosys 0.7 (git sha1 61f6811, gcc 6.2.0-11ubuntu1 -O2 -fdebug-prefix-map=/build/yosys-OIL3SR/yosys-0.7=. -fstack-protector-strong -fPIC -Os)",
+  "modules": {
+    "num_8": {
+      "attributes": {
+        "top": 1,
+        "src": "Test_Designs/num_8.v:6"
+      },
+      "ports": {
+        "x": {
+          "direction": "input",
+          "bits": [ 2 ]
+        },
+        "y": {
+          "direction": "input",
+          "bits": [ 3 ]
+        },
+        "cin": {
+          "direction": "input",
+          "bits": [ 4 ]
+        },
+        "A": {
+          "direction": "output",
+          "bits": [ "x" ]
+        },
+        "cout": {
+          "direction": "output",
+          "bits": [ "x" ]
+        }
+      },
+      "cells": {
+      },
+      "netnames": {
+        "A": {
+          "hide_name": 0,
+          "bits": [ "x" ],
+          "attributes": {
+            "src": "Test_Designs/num_8.v:6"
+          }
+        },
+        "cin": {
+          "hide_name": 0,
+          "bits": [ 4 ],
+          "attributes": {
+            "src": "Test_Designs/num_8.v:6"
+          }
+        },
+        "cout": {
+          "hide_name": 0,
+          "bits": [ "x" ],
+          "attributes": {
+            "src": "Test_Designs/num_8.v:6"
+          }
+        },
+        "x": {
+          "hide_name": 0,
+          "bits": [ 2 ],
+          "attributes": {
+            "src": "Test_Designs/num_8.v:6"
+          }
+        },
+        "y": {
+          "hide_name": 0,
+          "bits": [ 3 ],
+          "attributes": {
+            "src": "Test_Designs/num_8.v:6"
+          }
+        }
+      }
+    }
+  }
+}
