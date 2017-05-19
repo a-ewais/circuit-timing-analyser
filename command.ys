@@ -1,0 +1,10 @@
+read_verilog Test_Designs/num_8.v
+hierarchy -check
+proc; opt; fsm; opt; memory; opt
+techmap; opt
+dfflibmap -liberty osu035.lib
+abc -liberty osu035.lib
+clean
+write_verilog Synthesized/num_8.v
+write_json Gatlevel_Netlists/num_8.json
+
