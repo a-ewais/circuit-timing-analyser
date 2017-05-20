@@ -1,0 +1,53 @@
+{
+  "modules": {
+    "num_1": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_2": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_3": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_4": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_5": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_6": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_7": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_8": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_9": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_10": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    }
+}

@@ -12,8 +12,6 @@ class Graph:
     ff_paths =[] #the paths that starts at ff
     gates ={} #dictionary with node objects describing the graph
 
-
-
     def __init__(self,circuit_file,output_file=None,library_file='osu350.json'):
         self.adj,self.types,Gates = self.__build_graph(circuit_file)
         capacitances = self.__read_library(library_file)
@@ -197,9 +195,6 @@ class Graph:
                 nodes[0] = np.append(nodes[0], index)
         return nodes,types,Gates
 
-
-
-
     def write_paths(self,file,paths,types):
         target = open(file, 'w')
         target.write('PATHS WITH PORT NUMBERS\n=======================\n')
@@ -236,20 +231,4 @@ class Graph:
                 mx_index = path
         return mx_index,mx
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
