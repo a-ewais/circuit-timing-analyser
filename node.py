@@ -1,7 +1,11 @@
 from pin import Pin
 
 class Node:
-
+    #delay the delay for this node
+    #type the type of the gate
+    #graph pointer to the parent graph
+    #input_pins dictionary of the pins connected to the gate
+    '''you can use pin.connected_to to get the gate connected to this pin'''
     def __init__(self, index, type, pins,Graph):
         self.graph = Graph
         self.index = index
