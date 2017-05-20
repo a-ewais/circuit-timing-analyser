@@ -6,37 +6,12 @@ from node import Node
 #     def __init__(self,graph):
 
 class Graph:
-    def __init__(self, Gates,capacitances,adj,paths):
-        # print(types)
-        self.adj = adj
-        self.paths = paths
-        for i in range(len(Gates)):
-            if len(Gates[i]) == 3:
-                pins = {}
-                for name, connected_to in Gates[i][2].items():
-                    if name != 'Y':
-                        pins[name] = {'cell_rise': capacitances[Gates[i][1]]['Y'][name]['cell_rise'],
-                                      'cell_fall': capacitances[Gates[i][1]]['Y'][name]['cell_fall'],
-                                      'rise_transition': capacitances[Gates[i][1]]['Y'][name]['rise_transition'],
-                                      'fall_transition': capacitances[Gates[i][1]]['Y'][name]['fall_transition'],
-                                      'capacitance': capacitances[Gates[i][1]][name],
-                                      'connected_to': connected_to}
-                pins['Y'] = {
-                    'connected_to': Gates[i][2]['Y']
-                }
-                Gates[i][2] = pins
+    adj = [] #adjacency matrix with the nodes indeces
+    types =[] #the type of each node
+    paths =[] #the paths that starts at input
+    ff_paths =[] #the paths that starts at ff
+    gates ={} #dictionary with node objects describing the graph
 
-        self.gates = {}
-        for gate in Gates:
-            if len(gate) > 1:
-                self.gates[gate[0]] = Node(gate[0], gate[1], gate[2],self)
-
-        for name in adj:
-            name = int(name)
-            if name!=0 and str(name) not in self.gates:
-                self.gates[str(name)] = Node(str(name),'input',None,self)
-        for _,gate in sorted(self.gates.items()):
-            print('delay', gate.name,gate.get_delay())
 
 
     def __init__(self,circuit_file,output_file=None,library_file='osu350.json'):
