@@ -1,0 +1,62 @@
+{
+  "creator": "Yosys 0.7 (git sha1 61f6811, gcc 6.2.0-11ubuntu1 -O2 -fdebug-prefix-map=/build/yosys-OIL3SR/yosys-0.7=. -fstack-protector-strong -fPIC -Os)",
+  "modules": {
+    "num_8": {
+      "attributes": {
+        "src": "Test_Designs/num_10.v:6"
+      },
+      "ports": {
+        "clk": {
+          "direction": "input",
+          "bits": [ 2 ]
+        },
+        "d": {
+          "direction": "input",
+          "bits": [ 3 ]
+        },
+        "cout": {
+          "direction": "output",
+          "bits": [ 4 ]
+        }
+      },
+      "cells": {
+        "$auto$simplemap.cc:420:simplemap_dff$47": {
+          "hide_name": 1,
+          "type": "DFFPOSX1",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "connections": {
+            "CLK": [ 2 ],
+            "D": [ 3 ],
+            "Q": [ 4 ]
+          }
+        }
+      },
+      "netnames": {
+        "clk": {
+          "hide_name": 0,
+          "bits": [ 2 ],
+          "attributes": {
+            "src": "Test_Designs/num_10.v:6"
+          }
+        },
+        "cout": {
+          "hide_name": 0,
+          "bits": [ 4 ],
+          "attributes": {
+            "src": "Test_Designs/num_10.v:6"
+          }
+        },
+        "d": {
+          "hide_name": 0,
+          "bits": [ 3 ],
+          "attributes": {
+            "src": "Test_Designs/num_10.v:6"
+          }
+        }
+      }
+    }
+  }
+}

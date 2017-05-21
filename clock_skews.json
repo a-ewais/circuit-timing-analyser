@@ -1,0 +1,30 @@
+{
+  "modules": {
+    "num_1": {
+    },
+    "num_2": {
+    },
+    "num_3": {
+    },
+    "num_4": {
+    },
+    "num_5": {
+    },
+    "num_6": {
+    },
+    "num_7": {
+    },
+    "num_8": {
+    },
+    "num_9": {
+      "clock_skew": {
+        "$auto$simplemap.cc:420:simplemap_dff$58": 0.5,
+        "$auto$simplemap.cc:420:simplemap_dff$59": 0.6
+      }
+    },
+    "num_10": {
+      "clock_skew": {
+        "$auto$simplemap.cc:420:simplemap_dff$47": 0.7
+      }
+    }
+}
