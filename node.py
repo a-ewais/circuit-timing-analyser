@@ -67,9 +67,10 @@ class Node:
         for name, pin in self.input_pins.items():
             # print('transition', self.index,name,pin.get_output_transition(
             #     self.output_net_capacitance + pin.pin_capacitance, self.graph.get_node(pin.connected_to).get_out_transition()) )
-            self.output_transition = max(self.output_transition, pin.get_output_transition(
-                self.output_net_capacitance + pin.pin_capacitance,
-                self.graph.get_node(pin.connected_to).get_out_transition()))
+            if name != 'D':
+                self.output_transition = max(self.output_transition, pin.get_output_transition(
+                    self.output_net_capacitance + pin.pin_capacitance,
+                    self.graph.get_node(pin.connected_to).get_out_transition()))
         return self.output_transition
 
 
@@ -80,8 +81,8 @@ class Node:
         for name, pin in self.input_pins.items():
             # print('delay' ,self.index, name,pin.get_delay(self.output_net_capacitance+ pin.pin_capacitance,
             #                                        self.graph.get_node(pin.connected_to).get_out_transition()))
-
-            self.delay = max(self.delay, pin.get_delay(self.output_net_capacitance + pin.pin_capacitance,
+            if name != 'D':
+                self.delay = max(self.delay, pin.get_delay(self.output_net_capacitance + pin.pin_capacitance,
                                                        self.graph.get_node(pin.connected_to).get_out_transition()))
         return self.delay
 
