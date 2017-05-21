@@ -21,16 +21,28 @@ class Graph:
         for i in range(len(Gates)):
             if len(Gates[i]) == 3:
                 pins = {}
+                pin_type = 'Y'
                 for name, connected_to in Gates[i][2].items():
-                    if name != 'Y':
-                        pins[name] = {'cell_rise': capacitances[Gates[i][1]]['Y'][name]['cell_rise'],
-                                      'cell_fall': capacitances[Gates[i][1]]['Y'][name]['cell_fall'],
-                                      'rise_transition': capacitances[Gates[i][1]]['Y'][name]['rise_transition'],
-                                      'fall_transition': capacitances[Gates[i][1]]['Y'][name]['fall_transition'],
-                                      'capacitance': capacitances[Gates[i][1]][name],
-                                      'connected_to': connected_to}
-                pins['Y'] = {
-                    'connected_to': Gates[i][2]['Y']
+                    if name != 'Y' and name != 'Q':
+                        if 'Y' in capacitances[Gates[i][1]]:
+                            pin_type = 'Y'
+                            pins[name] = {'cell_rise': capacitances[Gates[i][1]]['Y'][name]['cell_rise'],
+                                          'cell_fall': capacitances[Gates[i][1]]['Y'][name]['cell_fall'],
+                                          'rise_transition': capacitances[Gates[i][1]]['Y'][name]['rise_transition'],
+                                          'fall_transition': capacitances[Gates[i][1]]['Y'][name]['fall_transition'],
+                                          'capacitance': capacitances[Gates[i][1]][name],
+                                          'connected_to': connected_to}
+                        elif 'Q' in capacitances[Gates[i][1]]:
+                            pin_type = 'Q'
+                            if name == 'CLK':
+                                pins[name] = {'cell_rise': capacitances[Gates[i][1]]['Q'][name]['cell_rise'],
+                                              'cell_fall': capacitances[Gates[i][1]]['Q'][name]['cell_fall'],
+                                              'rise_transition': capacitances[Gates[i][1]]['Q'][name]['rise_transition'],
+                                              'fall_transition': capacitances[Gates[i][1]]['Q'][name]['fall_transition'],
+                                              'capacitance': capacitances[Gates[i][1]][name],
+                                              'connected_to': connected_to}
+                pins[pin_type] = {
+                    'connected_to': Gates[i][2][pin_type]
                 }
                 Gates[i][2] = pins
 
@@ -275,8 +287,14 @@ class Graph:
                     temp = np.append(temp, out)
 
                     nodes[value] = temp
-                pre_gates = np.append(data['modules'][i]['cells'][m]['connections']['Y'], type_)
-                pre_gates = np.append(pre_gates, data['modules'][i]['cells'][m]['connections'])
+
+                if 'Y' in data['modules'][i]['cells'][m]['connections']:
+                    pre_gates = np.append(data['modules'][i]['cells'][m]['connections']['Y'], type_)
+                    pre_gates = np.append(pre_gates, data['modules'][i]['cells'][m]['connections'])
+                elif 'Q' in data['modules'][i]['cells'][m]['connections']:
+                    pre_gates = np.append(data['modules'][i]['cells'][m]['connections']['Q'], type_)
+                    pre_gates = np.append(pre_gates, data['modules'][i]['cells'][m]['connections'])
+
                 Gates = np.append(Gates, pre_gates)
 
         Gates = [Gates[i * 3:(i * 3) + 3] for i in range((len(Gates) // 3) + 1)]
@@ -325,7 +343,6 @@ class Graph:
             path.pop(0)
             sum = 0
             for i in path:
-
                 i = str(int(i))
                 sum += self.get_node(i).get_delay()
             if(sum > mx):
@@ -333,4 +350,8 @@ class Graph:
                 mx_index = path
         return mx_index,mx
 
-    
+    def get_skews(self):
+        clock_skews = []
+        for i in types:
+            print(i)
+        return clock_skews
