@@ -54,7 +54,7 @@ class Node:
 
 
     def get_hold(self,ff_info):
-        hold = [[max(ff_info['hold_rise']['table'][str(x)][str(y)],ff_info['hold_fall']['table'][str(x)][str(y)])
+        hold = [[min(ff_info['hold_rise']['table'][str(x)][str(y)],ff_info['hold_fall']['table'][str(x)][str(y)])
                   for y in ff_info['hold_rise']['x_values']]for x in ff_info['hold_rise']['y_values']]
         hold = interpolate.interp2d(ff_info['hold_rise']['x_values'], ff_info['hold_rise']['y_values'],
                                  hold, bounds_error=False, copy=False)

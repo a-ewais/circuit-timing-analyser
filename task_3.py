@@ -73,7 +73,7 @@ class Graph:
             'setup_rise': flip_flops['setup']['DFFPOSX1']['setup_rising']['rise_constraint'],
             'setup_fall': flip_flops['setup']['DFFPOSX1']['setup_rising']['fall_constraint']
         }
-        for gate in self.gates:
+        for gate in self.gates.values():
             gate.handle_ff(ff_info)
 
         for name in self.adj:
@@ -359,7 +359,6 @@ class Graph:
         target.close()
 
     def get_node(self, index):
-        print(self.gates.keys())
         return self.gates[index]
 
     def get_critical_path(self):
