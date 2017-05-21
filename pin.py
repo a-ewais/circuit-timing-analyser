@@ -28,7 +28,6 @@ class Pin:
         return f(input_transision, total_output_net_capacitance)[0]
 
     def get_delay(self, total_output_net_capacitance, input_transision):
-        print(self.name,self.connected_to)
         f = interpolate.interp2d(self.x_values, self.y_values, self.delay, bounds_error=False, copy=False)
         # print(f(input_transision,total_output_net_capacitance)[0])
         return f(input_transision, total_output_net_capacitance)[0]

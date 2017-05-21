@@ -9,8 +9,10 @@ from node import Node
 class Graph:
     adj = []  # adjacency matrix with the nodes indeces
     types = []  # the type of each node
-    paths = []  # the paths that starts at input
-    ff_paths = []  # the paths that starts at ff
+    paths = {'ito': [],
+             'ftf': [],
+             'itf': [],
+             'fto': []}  # the paths
     gates = {}  # dictionary with node objects describing the graph
     module_name = ''
     timing_constraints = {}
@@ -22,10 +24,15 @@ class Graph:
         capacitances, flip_flops = self.__read_library(library_file)
         self.timing_constraints = self.__get_constraints(constraints_file)
         self.skews = self.__get_skews(skews_file)
-        print(self.skews)
-        self.paths = []
-        self.ff_paths = []
+        print(self.skews) #needs fixing
+        print(self.types)
+        self.dfs(0, 0, [])
         self.dfs(0, 1, [])
+        for i in self.types.keys():
+            if self.types[i] == 'DFFPOSX1':
+                self.dfs(i, 2, [])
+                self.dfs(i, 3, [])
+        print(self.paths)
         for i in range(len(Gates)):
             if len(Gates[i]) == 3:
                 pins = {}
@@ -85,12 +92,18 @@ class Graph:
 
     def dfs(self, index, type, to_print):
         # vis[index] = 1
-        to_print.append(index)
+        to_print.append(int(index))
         if type == 0 and self.types[index] == 'DFFPOSX1':
-            self.ff_paths.append(to_print)
+            self.paths['itf'].append(to_print)
             return
         if type == 1 and self.types[index] == 'output':
-            self.paths.append(to_print)
+            self.paths['ito'].append(to_print)
+            return
+        if type == 2 and self.types[index] == 'DFFPOSX1':
+            self.paths['ftf'].append(to_print)
+            return
+        if type == 3 and self.types[index] == 'output':
+            self.paths['fto'].append(to_print)
             return
         for i in range(len(self.adj[index])):
             # if not vis[adj[index][i]]:
@@ -364,7 +377,7 @@ class Graph:
     def get_critical_path(self):
         mx = 0
         mx_index = 0
-        for path in self.paths:
+        for path in self.paths['ito']:
             path.pop()
             path.pop(0)
             sum = 0
