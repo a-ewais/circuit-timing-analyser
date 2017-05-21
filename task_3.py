@@ -14,7 +14,7 @@ class Graph:
 
     def __init__(self,circuit_file,output_file=None,library_file='osu350.json'):
         self.adj,self.types,Gates = self.__build_graph(circuit_file)
-        capacitances = self.__read_library(library_file)
+        capacitances, flip_flops = self.__read_library(library_file)
         self.paths = []
         self.ff_paths = []
         self.dfs(0, 1, [])
@@ -63,67 +63,168 @@ class Graph:
 
     def __read_library(self,library_file = 'osu350.json'):
         liberty = json.loads(open(library_file).read())
-
+        FLIP_FLOPS = {'hold': {}, 'setup': {}}
         pin_capacitances = {}
+
         for i in liberty['cells']:
-            if 'pins' in liberty['cells'][i].keys():
-                temp = []
-                for k in liberty['cells'][i]['pins']:
-                    pin = {}
-                    if 'capacitance' in liberty['cells'][i]['pins'][k].keys():
-                        pin[k] = liberty['cells'][i]['pins'][k]['capacitance']
-                        temp = np.append(temp, pin)
+            if i == 'DFFPOSX1':
+                print('ANA FLIP FLOP')
+                if 'pins' in liberty['cells'][i].keys():
+                    temp = []
+                    for k in liberty['cells'][i]['pins']:
+                        pin = {}
+                        if 'capacitance' in liberty['cells'][i]['pins'][k].keys():
+                            pin[k] = liberty['cells'][i]['pins'][k]['capacitance']
+                            temp = np.append(temp, pin)
 
-                    if k is 'Y':
-                        if 'timing' in liberty['cells'][i]['pins']['Y']:
-                            pin[k] = {}
-                            for j in liberty['cells'][i]['pins']['Y']['timing']:
-                                pin[k][j] = {}
-                                if 'cell_rise' in liberty['cells'][i]['pins']['Y']['timing'][j]:
-                                    if 'x_values' in liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise']:
-                                        y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise'][
-                                            'y_values']
-                                        x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise'][
-                                            'x_values']
-                                        table = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise']['table']
-                                        pin[k][j]['cell_rise'] = {}
-                                        pin[k][j]['cell_rise']['y_values'] = y_values
-                                        pin[k][j]['cell_rise']['x_values'] = x_values
-                                        pin[k][j]['cell_rise']['table'] = table
+                        if k is 'Q':
+                            if 'timing' in liberty['cells'][i]['pins']['Q']:
+                                pin[k] = {}
+                                for j in liberty['cells'][i]['pins']['Q']['timing']:
+                                    pin[k][j] = {}
+                                    if 'cell_rise' in liberty['cells'][i]['pins']['Q']['timing'][j]:
+                                        if 'x_values' in liberty['cells'][i]['pins']['Q']['timing'][j]['cell_rise']:
+                                            y_values = liberty['cells'][i]['pins']['Q']['timing'][j]['cell_rise'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Q']['timing'][j]['cell_rise'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Q']['timing'][j]['cell_rise']['table']
+                                            pin[k][j]['cell_rise'] = {}
+                                            pin[k][j]['cell_rise']['y_values'] = y_values
+                                            pin[k][j]['cell_rise']['x_values'] = x_values
+                                            pin[k][j]['cell_rise']['table'] = table
 
-                                        y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_fall'][
-                                            'y_values']
-                                        x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_fall'][
-                                            'x_values']
-                                        table = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_fall']['table']
-                                        pin[k][j]['cell_fall'] = {}
-                                        pin[k][j]['cell_fall']['y_values'] = y_values
-                                        pin[k][j]['cell_fall']['x_values'] = x_values
-                                        pin[k][j]['cell_fall']['table'] = table
+                                            y_values = liberty['cells'][i]['pins']['Q']['timing'][j]['cell_fall'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Q']['timing'][j]['cell_fall'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Q']['timing'][j]['cell_fall']['table']
+                                            pin[k][j]['cell_fall'] = {}
+                                            pin[k][j]['cell_fall']['y_values'] = y_values
+                                            pin[k][j]['cell_fall']['x_values'] = x_values
+                                            pin[k][j]['cell_fall']['table'] = table
 
-                                        y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['rise_transition'][
-                                            'y_values']
-                                        x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['rise_transition'][
-                                            'x_values']
-                                        table = liberty['cells'][i]['pins']['Y']['timing'][j]['rise_transition'][
-                                            'table']
-                                        pin[k][j]['rise_transition'] = {}
-                                        pin[k][j]['rise_transition']['y_values'] = y_values
-                                        pin[k][j]['rise_transition']['x_values'] = x_values
-                                        pin[k][j]['rise_transition']['table'] = table
+                                            y_values = liberty['cells'][i]['pins']['Q']['timing'][j]['rise_transition'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Q']['timing'][j]['rise_transition'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Q']['timing'][j]['rise_transition'][
+                                                'table']
+                                            pin[k][j]['rise_transition'] = {}
+                                            pin[k][j]['rise_transition']['y_values'] = y_values
+                                            pin[k][j]['rise_transition']['x_values'] = x_values
+                                            pin[k][j]['rise_transition']['table'] = table
 
-                                        y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['fall_transition'][
-                                            'y_values']
-                                        x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['fall_transition'][
-                                            'x_values']
-                                        table = liberty['cells'][i]['pins']['Y']['timing'][j]['fall_transition'][
-                                            'table']
-                                        pin[k][j]['fall_transition'] = {}
-                                        pin[k][j]['fall_transition']['y_values'] = y_values
-                                        pin[k][j]['fall_transition']['x_values'] = x_values
-                                        pin[k][j]['fall_transition']['table'] = table
+                                            y_values = liberty['cells'][i]['pins']['Q']['timing'][j]['fall_transition'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Q']['timing'][j]['fall_transition'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Q']['timing'][j]['fall_transition'][
+                                                'table']
+                                            pin[k][j]['fall_transition'] = {}
+                                            pin[k][j]['fall_transition']['y_values'] = y_values
+                                            pin[k][j]['fall_transition']['x_values'] = x_values
+                                            pin[k][j]['fall_transition']['table'] = table
 
-                pin_capacitances[i] = temp
+                    pin_capacitances[i] = temp
+
+                if 'hold_rising' in liberty['cells'][i].keys():
+                    FLIP_FLOPS['hold'] = {i: {'hold_rising': {'rise_constraint': {}, 'fall_constraint': {}}}}
+
+                    y_values = liberty['cells'][i]['hold_rising']['rise_constraint']['y_values']
+                    x_values = liberty['cells'][i]['hold_rising']['rise_constraint']['x_values']
+                    table = liberty['cells'][i]['hold_rising']['rise_constraint']['table']
+
+                    FLIP_FLOPS['hold'][i]['hold_rising']['rise_constraint']['y_values'] = y_values
+                    FLIP_FLOPS['hold'][i]['hold_rising']['rise_constraint']['x_values'] = x_values
+                    FLIP_FLOPS['hold'][i]['hold_rising']['rise_constraint']['table'] = table
+
+                    y_values = liberty['cells'][i]['hold_rising']['fall_constraint']['y_values']
+                    x_values = liberty['cells'][i]['hold_rising']['fall_constraint']['x_values']
+                    table = liberty['cells'][i]['hold_rising']['fall_constraint']['table']
+
+                    FLIP_FLOPS['hold'][i]['hold_rising']['fall_constraint']['y_values'] = y_values
+                    FLIP_FLOPS['hold'][i]['hold_rising']['fall_constraint']['x_values'] = x_values
+                    FLIP_FLOPS['hold'][i]['hold_rising']['fall_constraint']['table'] = table
+
+                if 'setup_rising' in liberty['cells'][i].keys():
+                    FLIP_FLOPS['setup'] = {i: {'setup_rising': {'rise_constraint': {}, 'fall_constraint': {}}}}
+
+                    y_values = liberty['cells'][i]['setup_rising']['rise_constraint']['y_values']
+                    x_values = liberty['cells'][i]['setup_rising']['rise_constraint']['x_values']
+                    table = liberty['cells'][i]['setup_rising']['rise_constraint']['table']
+
+                    FLIP_FLOPS['setup'][i]['setup_rising']['rise_constraint']['y_values'] = y_values
+                    FLIP_FLOPS['setup'][i]['setup_rising']['rise_constraint']['x_values'] = x_values
+                    FLIP_FLOPS['setup'][i]['setup_rising']['rise_constraint']['table'] = table
+
+                    y_values = liberty['cells'][i]['setup_rising']['fall_constraint']['y_values']
+                    x_values = liberty['cells'][i]['setup_rising']['fall_constraint']['x_values']
+                    table = liberty['cells'][i]['setup_rising']['fall_constraint']['table']
+
+                    FLIP_FLOPS['setup'][i]['setup_rising']['fall_constraint']['y_values'] = y_values
+                    FLIP_FLOPS['setup'][i]['setup_rising']['fall_constraint']['x_values'] = x_values
+                    FLIP_FLOPS['setup'][i]['setup_rising']['fall_constraint']['table'] = table
+
+            else:
+                if 'pins' in liberty['cells'][i].keys():
+                    temp = []
+                    for k in liberty['cells'][i]['pins']:
+                        pin = {}
+                        if 'capacitance' in liberty['cells'][i]['pins'][k].keys():
+                            pin[k] = liberty['cells'][i]['pins'][k]['capacitance']
+                            temp = np.append(temp, pin)
+
+                        if k is 'Y':
+                            if 'timing' in liberty['cells'][i]['pins']['Y']:
+                                pin[k] = {}
+                                for j in liberty['cells'][i]['pins']['Y']['timing']:
+                                    pin[k][j] = {}
+                                    if 'cell_rise' in liberty['cells'][i]['pins']['Y']['timing'][j]:
+                                        if 'x_values' in liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise']:
+                                            y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_rise']['table']
+                                            pin[k][j]['cell_rise'] = {}
+                                            pin[k][j]['cell_rise']['y_values'] = y_values
+                                            pin[k][j]['cell_rise']['x_values'] = x_values
+                                            pin[k][j]['cell_rise']['table'] = table
+
+                                            y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_fall'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_fall'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Y']['timing'][j]['cell_fall']['table']
+                                            pin[k][j]['cell_fall'] = {}
+                                            pin[k][j]['cell_fall']['y_values'] = y_values
+                                            pin[k][j]['cell_fall']['x_values'] = x_values
+                                            pin[k][j]['cell_fall']['table'] = table
+
+                                            y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['rise_transition'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['rise_transition'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Y']['timing'][j]['rise_transition'][
+                                                'table']
+                                            pin[k][j]['rise_transition'] = {}
+                                            pin[k][j]['rise_transition']['y_values'] = y_values
+                                            pin[k][j]['rise_transition']['x_values'] = x_values
+                                            pin[k][j]['rise_transition']['table'] = table
+
+                                            y_values = liberty['cells'][i]['pins']['Y']['timing'][j]['fall_transition'][
+                                                'y_values']
+                                            x_values = liberty['cells'][i]['pins']['Y']['timing'][j]['fall_transition'][
+                                                'x_values']
+                                            table = liberty['cells'][i]['pins']['Y']['timing'][j]['fall_transition'][
+                                                'table']
+                                            pin[k][j]['fall_transition'] = {}
+                                            pin[k][j]['fall_transition']['y_values'] = y_values
+                                            pin[k][j]['fall_transition']['x_values'] = x_values
+                                            pin[k][j]['fall_transition']['table'] = table
+
+                    pin_capacitances[i] = temp
 
         capacitances = {}
 
@@ -133,7 +234,8 @@ class Graph:
                     capacitances[i] = {**j, **capacitances[i]}
                 else:
                     capacitances[i] = j
-        return capacitances
+
+        return capacitances, FLIP_FLOPS
 
     def __build_graph(self,json_file = './num_2.json'):
         data = json.loads(open(json_file).read())
