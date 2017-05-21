@@ -13,12 +13,16 @@ class Graph:
     ff_paths = []  # the paths that starts at ff
     gates = {}  # dictionary with node objects describing the graph
     module_name = ''
-    clock_skews = {}
     timing_constraints = {}
 
-    def __init__(self, circuit_file, output_file=None, library_file='osu350.json'):
+    def __init__(self, circuit_file, output_file=None,
+                 library_file='osu350.json', constraints_file='./timing_constraints.json',
+                 skews_file ='./clock_skews.json'):
         self.adj, self.types, Gates = self.__build_graph(circuit_file)
         capacitances, flip_flops = self.__read_library(library_file)
+        self.timing_constraints = self.__get_constraints(constraints_file)
+        self.skews = self.__get_skews(skews_file)
+        print(self.skews)
         self.paths = []
         self.ff_paths = []
         self.dfs(0, 1, [])
@@ -46,16 +50,31 @@ class Graph:
                                               'fall_transition': capacitances[Gates[i][1]]['Q'][name][
                                                   'fall_transition'],
                                               'capacitance': capacitances[Gates[i][1]][name],
-                                              'connected_to': connected_to}
+                                              'connected_to': connected_to
+                                              }
+                            else:
+                                pins[name] = {
+                                    'capacitance': capacitances[Gates[i][1]][name],
+                                    'connected_to': connected_to
+                                }
                 pins[pin_type] = {
                     'connected_to': Gates[i][2][pin_type]
                 }
                 Gates[i][2] = pins
-
+        print(flip_flops['hold']['DFFPOSX1']['hold_rising'].keys())
         self.gates = {}
         for gate in Gates:
             if len(gate) > 1:
                 self.gates[gate[0]] = Node(gate[0], gate[1], gate[2], self)
+
+        ff_info = {
+            'hold_rise': flip_flops['hold']['DFFPOSX1']['hold_rising']['rise_constraint'],
+            'hold_fall': flip_flops['hold']['DFFPOSX1']['hold_rising']['fall_constraint'],
+            'setup_rise': flip_flops['setup']['DFFPOSX1']['setup_rising']['rise_constraint'],
+            'setup_fall': flip_flops['setup']['DFFPOSX1']['setup_rising']['fall_constraint']
+        }
+        for gate in self.gates:
+            gate.handle_ff(ff_info)
 
         for name in self.adj:
             name = int(name)
@@ -340,6 +359,7 @@ class Graph:
         target.close()
 
     def get_node(self, index):
+        print(self.gates.keys())
         return self.gates[index]
 
     def get_critical_path(self):
@@ -357,22 +377,22 @@ class Graph:
                 mx_index = path
         return mx_index, mx
 
-    def get_skews(self, json_file='./clock_skews.json'):
+    def __get_skews(self, json_file='./clock_skews.json'):
         data = json.loads(open(json_file).read())
-
+        clock_skews = {}
         for _, gate in sorted(self.gates.items()):
             Type = gate.name[:8]
             index = gate.name[9:]
             if Type == 'DFFPOSX1':
-                self.clock_skews[gate.name] = data['modules'][self.module_name]['clock_skew'][gate.name]
+                clock_skews[gate.name] = data['modules'][self.module_name]['clock_skew'][gate.name]
 
-        return self.clock_skews
+        return clock_skews
 
-    def get_constraints(self, json_file='./timing_constraints.json'):
+    def __get_constraints(self, json_file='./timing_constraints.json'):
         data = json.loads(open(json_file).read())
+        timing_constraints={}
+        timing_constraints['input_delay'] = data['modules'][self.module_name]['input_delay']
+        timing_constraints['output_delay'] = data['modules'][self.module_name]['output_delay']
+        timing_constraints['clock_period'] = data['modules'][self.module_name]['clock_period']
 
-        self.timing_constraints['input_delay'] = data['modules'][self.module_name]['input_delay']
-        self.timing_constraints['output_delay'] = data['modules'][self.module_name]['output_delay']
-        self.timing_constraints['clock_period'] = data['modules'][self.module_name]['clock_period']
-
-        return self.timing_constraints
+        return timing_constraints
