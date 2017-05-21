@@ -18,13 +18,14 @@
     },
     "num_9": {
       "clock_skew": {
-        "$auto$simplemap.cc:420:simplemap_dff$58": 0.5,
-        "$auto$simplemap.cc:420:simplemap_dff$59": 0.6
+        "DFFPOSX1_7": 0.5,
+        "DFFPOSX1_12": 0.6
       }
     },
     "num_10": {
       "clock_skew": {
-        "$auto$simplemap.cc:420:simplemap_dff$47": 0.7
+        "DFFPOSX1_2": 0.7
       }
     }
+  }
 }

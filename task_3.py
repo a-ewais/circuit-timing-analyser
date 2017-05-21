@@ -2,18 +2,22 @@ import numpy as np
 import json
 from node import Node
 
+
 # class path:
 #     def __init__(self,graph):
 
 class Graph:
-    adj = [] #adjacency matrix with the nodes indeces
-    types =[] #the type of each node
-    paths =[] #the paths that starts at input
-    ff_paths =[] #the paths that starts at ff
-    gates ={} #dictionary with node objects describing the graph
+    adj = []  # adjacency matrix with the nodes indeces
+    types = []  # the type of each node
+    paths = []  # the paths that starts at input
+    ff_paths = []  # the paths that starts at ff
+    gates = {}  # dictionary with node objects describing the graph
+    module_name = ''
+    clock_skews = {}
+    timing_constraints = {}
 
-    def __init__(self,circuit_file,output_file=None,library_file='osu350.json'):
-        self.adj,self.types,Gates = self.__build_graph(circuit_file)
+    def __init__(self, circuit_file, output_file=None, library_file='osu350.json'):
+        self.adj, self.types, Gates = self.__build_graph(circuit_file)
         capacitances, flip_flops = self.__read_library(library_file)
         self.paths = []
         self.ff_paths = []
@@ -37,8 +41,10 @@ class Graph:
                             if name == 'CLK':
                                 pins[name] = {'cell_rise': capacitances[Gates[i][1]]['Q'][name]['cell_rise'],
                                               'cell_fall': capacitances[Gates[i][1]]['Q'][name]['cell_fall'],
-                                              'rise_transition': capacitances[Gates[i][1]]['Q'][name]['rise_transition'],
-                                              'fall_transition': capacitances[Gates[i][1]]['Q'][name]['fall_transition'],
+                                              'rise_transition': capacitances[Gates[i][1]]['Q'][name][
+                                                  'rise_transition'],
+                                              'fall_transition': capacitances[Gates[i][1]]['Q'][name][
+                                                  'fall_transition'],
                                               'capacitance': capacitances[Gates[i][1]][name],
                                               'connected_to': connected_to}
                 pins[pin_type] = {
@@ -49,17 +55,16 @@ class Graph:
         self.gates = {}
         for gate in Gates:
             if len(gate) > 1:
-                self.gates[gate[0]] = Node(gate[0], gate[1], gate[2],self)
+                self.gates[gate[0]] = Node(gate[0], gate[1], gate[2], self)
 
         for name in self.adj:
             name = int(name)
-            if name!=0 and str(name) not in self.gates:
-                self.gates[str(name)] = Node(str(name),'input',None,self)
-        for _,gate in sorted(self.gates.items()):
-            print('delay', gate.name,gate.get_delay())
+            if name != 0 and str(name) not in self.gates:
+                self.gates[str(name)] = Node(str(name), 'input', None, self)
+        for _, gate in sorted(self.gates.items()):
+            print('delay', gate.name, gate.get_delay())
 
-
-    def dfs(self,index, type, to_print):
+    def dfs(self, index, type, to_print):
         # vis[index] = 1
         to_print.append(index)
         if type == 0 and self.types[index] == 'DFFPOSX1':
@@ -72,15 +77,13 @@ class Graph:
             # if not vis[adj[index][i]]:
             self.dfs(self.adj[index][i], type, list(to_print))
 
-
-    def __read_library(self,library_file = 'osu350.json'):
+    def __read_library(self, library_file='osu350.json'):
         liberty = json.loads(open(library_file).read())
         FLIP_FLOPS = {'hold': {}, 'setup': {}}
         pin_capacitances = {}
 
         for i in liberty['cells']:
             if i == 'DFFPOSX1':
-                print('ANA FLIP FLOP')
                 if 'pins' in liberty['cells'][i].keys():
                     temp = []
                     for k in liberty['cells'][i]['pins']:
@@ -249,8 +252,12 @@ class Graph:
 
         return capacitances, FLIP_FLOPS
 
-    def __build_graph(self,json_file = './num_2.json'):
+    def __build_graph(self, json_file='./num_2.json'):
         data = json.loads(open(json_file).read())
+        index_start = json_file.find('num')
+        index_end = json_file.find('.json')
+        self.module_name = json_file[index_start:index_end]
+
         ports = {}
         nodes = {}
         types = {}
@@ -313,9 +320,9 @@ class Graph:
         for index, type_ in types.items():
             if type_ == 'input':
                 nodes[0] = np.append(nodes[0], index)
-        return nodes,types,Gates
+        return nodes, types, Gates
 
-    def write_paths(self,file,paths,types):
+    def write_paths(self, file, paths, types):
         target = open(file, 'w')
         target.write('PATHS WITH PORT NUMBERS\n=======================\n')
         for i in range(len(paths)):
@@ -332,7 +339,7 @@ class Graph:
             target.write("\n")
         target.close()
 
-    def get_node(self,index):
+    def get_node(self, index):
         return self.gates[index]
 
     def get_critical_path(self):
@@ -345,13 +352,27 @@ class Graph:
             for i in path:
                 i = str(int(i))
                 sum += self.get_node(i).get_delay()
-            if(sum > mx):
-                mx =sum
+            if (sum > mx):
+                mx = sum
                 mx_index = path
-        return mx_index,mx
+        return mx_index, mx
 
-    def get_skews(self):
-        clock_skews = []
-        for i in types:
-            print(i)
-        return clock_skews
+    def get_skews(self, json_file='./clock_skews.json'):
+        data = json.loads(open(json_file).read())
+
+        for _, gate in sorted(self.gates.items()):
+            Type = gate.name[:8]
+            index = gate.name[9:]
+            if Type == 'DFFPOSX1':
+                self.clock_skews[gate.name] = data['modules'][self.module_name]['clock_skew'][gate.name]
+
+        return self.clock_skews
+
+    def get_constraints(self, json_file='./timing_constraints.json'):
+        data = json.loads(open(json_file).read())
+
+        self.timing_constraints['input_delay'] = data['modules'][self.module_name]['input_delay']
+        self.timing_constraints['output_delay'] = data['modules'][self.module_name]['output_delay']
+        self.timing_constraints['clock_period'] = data['modules'][self.module_name]['clock_period']
+
+        return self.timing_constraints
