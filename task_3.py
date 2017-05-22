@@ -26,6 +26,7 @@ class Graph:
         self.skews = self.__get_skews(skews_file)
         print(self.skews) #needs fixing
         print(self.types)
+        print(self.adj)
         self.dfs(0, 0, [])
         self.dfs(0, 1, [])
         for i in self.types.keys():
@@ -68,12 +69,18 @@ class Graph:
                     'connected_to': Gates[i][2][pin_type]
                 }
                 Gates[i][2] = pins
-        print(flip_flops['hold']['DFFPOSX1']['hold_rising'].keys())
+
         self.gates = {}
         for gate in Gates:
             if len(gate) > 1:
                 self.gates[gate[0]] = Node(gate[0], gate[1], gate[2], self)
 
+        for name in self.adj:
+            name = int(name)
+            if name != 0 and str(name) not in self.gates:
+                self.gates[str(name)] = Node(str(name), 'input', None, self)
+
+        # print(self.types)
         ff_info = {
             'hold_rise': flip_flops['hold']['DFFPOSX1']['hold_rising']['rise_constraint'],
             'hold_fall': flip_flops['hold']['DFFPOSX1']['hold_rising']['fall_constraint'],
@@ -82,11 +89,6 @@ class Graph:
         }
         for gate in self.gates.values():
             gate.handle_ff(ff_info)
-
-        for name in self.adj:
-            name = int(name)
-            if name != 0 and str(name) not in self.gates:
-                self.gates[str(name)] = Node(str(name), 'input', None, self)
         for _, gate in sorted(self.gates.items()):
             print('delay', gate.name, gate.get_delay())
 
@@ -99,14 +101,16 @@ class Graph:
         if type == 1 and self.types[index] == 'output':
             self.paths['ito'].append(to_print)
             return
-        if type == 2 and self.types[index] == 'DFFPOSX1':
+        if type == 2 and self.types[index] == 'DFFPOSX1'\
+                and len(to_print) > 1:
             self.paths['ftf'].append(to_print)
             return
         if type == 3 and self.types[index] == 'output':
             self.paths['fto'].append(to_print)
             return
+        if self.types[index] == 'output':
+            return
         for i in range(len(self.adj[index])):
-            # if not vis[adj[index][i]]:
             self.dfs(self.adj[index][i], type, list(to_print))
 
     def __read_library(self, library_file='osu350.json'):
@@ -284,7 +288,7 @@ class Graph:
 
         return capacitances, FLIP_FLOPS
 
-    def __build_graph(self, json_file='./num_2.json'):
+    def __build_graph(self, json_file):
         data = json.loads(open(json_file).read())
         index_start = json_file.find('num')
         index_end = json_file.find('.json')
@@ -372,6 +376,8 @@ class Graph:
         target.close()
 
     def get_node(self, index):
+        if type(index) is not str:
+            index = str(index)
         return self.gates[index]
 
     def get_critical_path(self):
@@ -387,7 +393,37 @@ class Graph:
             if (sum > mx):
                 mx = sum
                 mx_index = path
+        print(self.paths)
+        for path in self.paths['ftf']:
+            print(path)
+            self.__inspect_ff_path(path)
         return mx_index, mx
+
+
+    def __inspect_ff_path(self,path):
+        tpd = 0
+        for i in path:
+            gate = self.get_node(i)
+            if gate.type != 'DFFPOSX1':
+                tpd = tpd + gate.get_delay()
+        end_node = self.get_node(path[-1])
+        start_node = self.get_node(path[0])
+        setup,hold,slack = end_node.check_constraints(tpd,start_node.get_delay(),start_node.skew)
+        if hold :
+            print('==========================================')
+            print('hold time violation in FF_FF path:')
+            print(path)
+            print('==========================================')
+
+        if setup:
+            print('==========================================')
+            print('setup time violation in FF_FF path:')
+            print(path)
+            print(slack)
+            print('==========================================')
+
+
+
 
     def __get_skews(self, json_file='./clock_skews.json'):
         data = json.loads(open(json_file).read())
