@@ -384,7 +384,7 @@ class Graph:
         if type(index) is not str:
             index = str(index)
         if index not in self.gates.keys():
-            print(index,'errrrrrooorrr')
+            # print(index,'errrrrrooorrr')
             return None
         return self.gates[index]
 
@@ -438,7 +438,20 @@ class Graph:
         else:
             delay = 0
         for i in self.rev_adj[index]:
-            self.dfs_req(i,val+delay)
+            self.dfs_req(i,val-delay)
+
+    def dfs_arr(self,index,val):
+        if self.get_node(index):
+            delay = self.get_node(index).get_delay()
+            self.get_node(index).arrival = max(self.get_node(index).arrival,val+delay)
+        else:
+            delay = 0
+        if index not in self.adj.keys():
+            return
+        for i in self.adj[index]:
+            print(int(i))
+            self.dfs_arr(int(i),val+delay)
+
 
     def set_required(self):
         self.rev_adj = {}
@@ -449,10 +462,11 @@ class Graph:
         for key, arr in self.adj.items():
             for node in arr :
                 self.rev_adj[node].append(key)
+        self.dfs_arr(0,0)
         self.dfs_req(end,self.timing_constraints['clock_period'] - self.timing_constraints['output_delay'])
         for gate in self.gates.values():
-            gate.slack = gate.required-gate.get_delay()
-            print(gate.name,gate.get_delay(),gate.required,gate.slack)
+            gate.slack = gate.required-gate.arrival
+            print(gate.name,gate.arrival,gate.required,gate.slack)
 
     def __get_skews(self, json_file='./clock_skews.json'):
         data = json.loads(open(json_file).read())

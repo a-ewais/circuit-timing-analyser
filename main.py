@@ -1,7 +1,7 @@
 from task_3 import Graph
 # import pygraphviz as pgv
 
-graph = Graph('./Gatlevel_Netlists/num_3.json')
+graph = Graph('./Gatlevel_Netlists/num_2.json')
 cp, time = graph.get_critical_path()
 print(cp, time)
 
@@ -11,12 +11,12 @@ print(graph.adj)
 
 target = open('graph.gv', 'w')
 
-target.write("diagraph G {\n")
+target.write("digraph G {\n")
 
 for node,arr in graph.adj.items():
     if graph.types[int(node)] != 'output' and graph.types[int(node)] != 'start':
         rt = graph.get_node(int(node)).required
-        at = graph.get_node(int(node)).delay
+        at = graph.get_node(int(node)).arrival
         slack = graph.get_node(int(node)).slack
     else:
         rt = graph.timing_constraints['clock_period'] - graph.timing_constraints['output_delay']
@@ -27,7 +27,7 @@ for node,arr in graph.adj.items():
     if graph.types[int(node)] != 'output' and graph.types[int(node)] != 'start':
         start_node = graph.get_node(int(node)).name
 
-    target.write(str(start_node) + ' [label="Name:' + str(start_node) + '\\nRT: ' + str(rt) + '\\nAT: ' + str(at) + '\\nSlack: ' + str(slack) + '"]\n')
+    target.write(str(start_node) + ' [label="Name:' + str(start_node) + '\\nRT: ' + str(rt) + '\\nAT: ' + str(at) + '\\nSlack: ' + str(slack) + '"];\n')
     for i in arr:
         start = 'start'
         end = 'output'
@@ -36,4 +36,7 @@ for node,arr in graph.adj.items():
 
         if graph.types[int(i)] != 'output':
             end = graph.get_node(int(i)).name
-        target.write(str(start) + ' -> ' + str(end) + '\n')
+        target.write(str(start) + ' -> ' + str(end) + ';\n')
+
+target.write('}')
+target.close()

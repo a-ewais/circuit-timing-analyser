@@ -18,6 +18,7 @@ class Node:
         self.clock = 0
         self.setup = 0
         self.hold = 0
+        self.arrival = 0
         self.required = 999999999
         if type == 'input':
             self.delay = Graph.timing_constraints['input_delay']
