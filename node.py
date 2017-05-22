@@ -18,6 +18,7 @@ class Node:
         self.clock = 0
         self.setup = 0
         self.hold = 0
+        self.required = 999999999
         if type == 'input':
             self.delay = Graph.timing_constraints['input_delay']
             self.output_transition = 0.5
@@ -40,10 +41,7 @@ class Node:
         if self.type == 'DFFPOSX1':
             self.get_setup(ff_info)
             self.get_hold(ff_info)
-            # print('===========================')
-            # print(self.setup)
-            # print(self.hold)
-            self.skew = 0.6 #self.graph.skews[self.name]
+            self.skew = self.graph.skews[self.name]
             self.clock = self.graph.timing_constraints['clock_period']
 
 
@@ -53,7 +51,7 @@ class Node:
                   for y in ff_info['setup_rise']['x_values']] for x in ff_info['setup_rise']['y_values']]
         setup = interpolate.interp2d(ff_info['setup_rise']['x_values'], ff_info['setup_rise']['y_values'],
                                     setup, bounds_error=False, copy=False)
-        self.setup = setup(self.skew, self.graph.get_node(self.input_pins['D'].connected_to).get_out_transition())[0]
+        self.setup = setup(self.graph.get_node(self.input_pins['D'].connected_to).get_out_transition(),self.skew)[0]
 
 
     def get_hold(self,ff_info):
@@ -63,7 +61,7 @@ class Node:
         hold = interpolate.interp2d(ff_info['hold_rise']['x_values'], ff_info['hold_rise']['y_values'],
                                  hold, bounds_error=False, copy=False)
 
-        self.hold = -hold(self.skew, self.graph.get_node(self.input_pins['D'].connected_to).get_out_transition())[0]
+        self.hold = -hold(self.graph.get_node(self.input_pins['D'].connected_to).get_out_transition(),self.skew)[0]
 
     def get_out_transition(self):
         if self.output_transition is not None:
@@ -94,7 +92,7 @@ class Node:
     def check_constraints(self,t_prob,tcq,s_skew):
         '''true if we have a violation, this function is always called at the receiver flipflop
         not the sender.......slacks are positive if '''
-        slack = self.setup + s_skew + tcq + t_prob - (self.clock + self.skew)
+        slack = (self.clock + self.skew) - (self.setup + s_skew + tcq + t_prob)
         if (self.setup + s_skew + tcq + t_prob <= self.clock + self.skew):
             setup = False
         else:

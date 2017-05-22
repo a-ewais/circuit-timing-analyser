@@ -23,8 +23,8 @@ class Graph:
         self.adj, self.types, Gates = self.__build_graph(circuit_file)
         capacitances, flip_flops = self.__read_library(library_file)
         self.timing_constraints = self.__get_constraints(constraints_file)
-        self.skews = self.__get_skews(skews_file)
-        print(self.skews) #needs fixing
+
+
         print(self.types)
         print(self.adj)
         self.dfs(0, 0, [])
@@ -69,7 +69,6 @@ class Graph:
                     'connected_to': Gates[i][2][pin_type]
                 }
                 Gates[i][2] = pins
-
         self.gates = {}
         for gate in Gates:
             if len(gate) > 1:
@@ -79,7 +78,7 @@ class Graph:
             name = int(name)
             if name != 0 and str(name) not in self.gates:
                 self.gates[str(name)] = Node(str(name), 'input', None, self)
-
+        self.skews = self.__get_skews(skews_file)
         # print(self.types)
         ff_info = {
             'hold_rise': flip_flops['hold']['DFFPOSX1']['hold_rising']['rise_constraint'],
@@ -91,6 +90,7 @@ class Graph:
             gate.handle_ff(ff_info)
         for _, gate in sorted(self.gates.items()):
             print('delay', gate.name, gate.get_delay())
+        self.set_required()
 
     def dfs(self, index, type, to_print):
         # vis[index] = 1
@@ -334,8 +334,7 @@ class Graph:
                     # print(temp, out)
 
                     temp = np.append(temp, out)
-
-                    nodes[value] = temp
+                    nodes[int(value)] = temp
 
                 if 'Y' in data['modules'][i]['cells'][m]['connections']:
                     pre_gates = np.append(data['modules'][i]['cells'][m]['connections']['Y'], type_)
@@ -356,7 +355,7 @@ class Graph:
         last = int((sorted(nodes.keys())[-1]) + 1)
         types[last] = 'output'
         for wire in outs:
-            nodes[wire] = np.array([last])
+            nodes[int(wire)] = np.array([last])
         types[0] = 'start'
         nodes[0] = np.array([])
         for index, type_ in types.items():
@@ -384,6 +383,9 @@ class Graph:
     def get_node(self, index):
         if type(index) is not str:
             index = str(index)
+        if index not in self.gates.keys():
+            print(index,'errrrrrooorrr')
+            return None
         return self.gates[index]
 
     def get_critical_path(self):
@@ -415,7 +417,8 @@ class Graph:
         end_node = self.get_node(path[-1])
         start_node = self.get_node(path[0])
         setup,hold,slack = end_node.check_constraints(tpd,start_node.get_delay(),start_node.skew)
-        if hold :
+        print(slack)
+        if hold:
             print('==========================================')
             print('hold time violation in FF_FF path:')
             print(path)
@@ -428,8 +431,28 @@ class Graph:
             print(slack)
             print('==========================================')
 
+    def dfs_req(self,index,val):
+        if self.get_node(index):
+            self.get_node(index).required = min(self.get_node(index).required,val)
+            delay = self.get_node(index).get_delay()
+        else:
+            delay = 0
+        for i in self.rev_adj[index]:
+            self.dfs_req(i,val+delay)
 
-
+    def set_required(self):
+        self.rev_adj = {}
+        end = (sorted(self.types.keys()))[-1]
+        for key in self.adj.keys():
+            self.rev_adj[key] = []
+        self.rev_adj[end] = []
+        for key, arr in self.adj.items():
+            for node in arr :
+                self.rev_adj[node].append(key)
+        self.dfs_req(end,self.timing_constraints['clock_period'] - self.timing_constraints['output_delay'])
+        for gate in self.gates.values():
+            gate.slack = gate.required-gate.get_delay()
+            print(gate.name,gate.get_delay(),gate.required,gate.slack)
 
     def __get_skews(self, json_file='./clock_skews.json'):
         data = json.loads(open(json_file).read())
@@ -437,6 +460,7 @@ class Graph:
         for _, gate in sorted(self.gates.items()):
             Type = gate.name[:8]
             index = gate.name[9:]
+            # print(Type)
             if Type == 'DFFPOSX1':
                 clock_skews[gate.name] = data['modules'][self.module_name]['clock_skew'][gate.name]
 
