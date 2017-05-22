@@ -13,7 +13,7 @@
     "num_3": {
       "input_delay": 2.8,
       "output_delay": 2.8,
-      "clock_period": 7
+      "clock_period": 5
     },
     "num_4": {
       "input_delay": 2.8,
@@ -43,7 +43,7 @@
     "num_9": {
       "input_delay": 2.8,
       "output_delay": 2.8,
-      "clock_period": 7
+      "clock_period": 4  
     },
     "num_10": {
       "input_delay": 2.8,
