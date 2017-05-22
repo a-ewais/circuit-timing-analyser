@@ -98,16 +98,22 @@ class Graph:
         if type == 0 and self.types[index] == 'DFFPOSX1':
             self.paths['itf'].append(to_print)
             return
-        if type == 1 and self.types[index] == 'output':
-            self.paths['ito'].append(to_print)
-            return
+        if type == 1:
+            if self.types[index] == 'output':
+                self.paths['ito'].append(to_print)
+                return
+            if self.types[index] == 'DFFPOSX1':
+                return
         if type == 2 and self.types[index] == 'DFFPOSX1'\
                 and len(to_print) > 1:
             self.paths['ftf'].append(to_print)
             return
-        if type == 3 and self.types[index] == 'output':
-            self.paths['fto'].append(to_print)
-            return
+        if type == 3:
+            if self.types[index] == 'output':
+                self.paths['fto'].append(to_print)
+                return
+            if self.types[index] == 'DFFPOSX1':
+                return
         if self.types[index] == 'output':
             return
         for i in range(len(self.adj[index])):
