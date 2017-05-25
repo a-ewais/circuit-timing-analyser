@@ -363,6 +363,7 @@ class Graph:
         last = int((sorted(nodes.keys())[-1]) + 1)
         types[last] = 'output'
         for wire in outs:
+            print(wire)
             nodes[int(wire)] = np.array([last])
         types[0] = 'start'
         nodes[0] = np.array([])
@@ -509,10 +510,11 @@ class Graph:
 
     def set_required(self):
         self.rev_adj = {}
-        end = (sorted(self.types.keys()))[-1]
+
         for key in self.adj.keys():
             self.rev_adj[key] = []
-        self.rev_adj[end] = []
+        for end in (sorted(self.types.keys())):
+            self.rev_adj[end] = []
         for key, arr in self.adj.items():
             for node in arr :
                 self.rev_adj[node].append(key)

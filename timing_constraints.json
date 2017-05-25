@@ -49,6 +49,16 @@
       "input_delay": 2.8,
       "output_delay": 2.8,
       "clock_period": 7
+    },
+    "num_11": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
+    },
+    "num_12": {
+      "input_delay": 2.8,
+      "output_delay": 2.8,
+      "clock_period": 7
     }
   }
 }

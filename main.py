@@ -1,7 +1,7 @@
 from task_3 import Graph
 # import pygraphviz as pgv
 
-graph = Graph('./Gatlevel_Netlists/num_9.json')
+graph = Graph('./Gatlevel_Netlists/num_12.json')
 
 # cp, time = graph.get_critical_path()
 # print('critical_path = ',cp, time)
@@ -73,38 +73,68 @@ def generate_report(graph, output_path='report.txt'):
     target.write("----------------------------------------------------\n")
 
     path_delay = 0.0
+    tabs = ''
     # for i in graph.critical_path.nodes:
-    for i in cp:
+    for j in range(len(cp)):
+        i = cp[j]
+        # print(graph.types[i],type,type=='Input to Register Path')
+        if graph.types[i] == 'DFFPOSX1':
+            if type == 'Input to Register Path':
+                path_delay += graph.gates[str(i)].setup- graph.gates[str(i)].skew
+                delay = graph.gates[str(i)].setup- graph.gates[str(i)].skew
+            elif type == 'Register to Output Path':
+                path_delay += graph.gates[str(i)].get_delay() + graph.gates[str(i)].skew
+                delay = graph.gates[str(i)].get_delay() + graph.gates[str(i)].skew
+            else:
+                if j == 0:
+                    path_delay += graph.gates[str(i)].setup - graph.gates[str(i)].skew
+                    delay = graph.gates[str(i)].setup - graph.gates[str(i)].skew
+                else:
+                    path_delay += graph.gates[str(i)].get_delay() + graph.gates[str(i)].skew
+                    delay = graph.gates[str(i)].get_delay() + graph.gates[str(i)].skew
+            tabs = '\t'
+        else:
+            path_delay += graph.gates[str(i)].delay
+            delay = graph.gates[str(i)].delay
+            tabs = '\t\t'
 
-        path_delay += graph.gates[str(i)].delay
         target.write(
-            str(i) + "\t" + str(graph.types[int(i)]) + "\t\t" + str(round(graph.gates[str(i)].delay, 3)) + "\t\t" + str(
+            str(i) + "\t" + str(graph.types[int(i)]) + tabs + str(round(delay, 3)) + "\t\t" + str(
                 round(path_delay, 3)) + "\n")
     target.write("----------------------------------------------------\n")
     target.write("Data Arrival Time\t\t\t" + str(round(path_delay, 3)) + "\n")
     target.close()
 
-def draw_critical_path(critical_path):
-    target = open('critical.gv', 'w')
+def draw_critical_path(critical_path,graph):
+    target = open('graph.gv', 'w')
     target.write("digraph G {\n")
 
-    for node in critical_path:
-        rt = graph.get_node(int(node)).required
-        at = graph.get_node(int(node)).arrival
-        slack = graph.get_node(int(node)).slack
-        name = graph.get_node(int(node)).name
+    path_delay = 0
+    for index in critical_path:
+        node = graph.get_node(index)
+        name = node.name
+        path_delay += node.delay
+        delay = node.delay
 
-        target.write(str(name) + ' [label="Name:' + str(start_node) + '\\nRT: ' + str(rt) + '\\nAT: ' + str(
-            at) + '\\nSlack: ' + str(slack) + '"];\n')
+        target.write(str(name) + ' [label="Name:' + str(name) + '\\nGateDelay: ' + str(delay) + '\\nPathDelay: '
+                     + str(path_delay) + '"];\n')
 
-        for j in graph.adj[node]:
-            start = graph.get_node(int(node)).name
-            end = graph.get_node(int(j)).name
-
-            target.write(str(start) + ' -> ' + str(end) + ';\n')
+        for j in graph.adj[index]:
+            start = node.name
+            if j in critical_path:
+                end = graph.get_node(int(j)).name
+                target.write(str(start) + ' -> ' + str(end) + ';\n')
 
     target.write("}")
     target.close()
 
-draw_graph(graph)
+cp, time ,type = graph.get_critical_path()
+print(cp , time, type)
+
+if graph.paths['fto'] or graph.paths['ftf'] or graph.paths['itf']:
+    draw_critical_path(cp,graph)
+else:
+    draw_graph(graph)
+
+
 generate_report(graph)

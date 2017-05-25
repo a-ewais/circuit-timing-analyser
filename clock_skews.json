@@ -26,6 +26,16 @@
       "clock_skew": {
         "DFFPOSX1_2": 0.7
       }
+    },
+    "num_11": {
+    },
+    "num_12": {
+      "clock_skew": {
+        "DFFPOSX1_11": 0.7,
+        "DFFPOSX1_12": 0.7,
+        "DFFPOSX1_13": 0.7,
+        "DFFPOSX1_14": 0.7
+      }
     }
   }
 }
