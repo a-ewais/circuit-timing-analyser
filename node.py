@@ -20,23 +20,27 @@ class Node:
         self.hold = 0
         self.arrival = 0
         self.required = 999999999
+        self.cap = 0
         if type == 'input':
             self.delay = Graph.timing_constraints['input_delay']
             self.output_transition = 0.5
-            self.output_net_capacitance = 0
+            # self.output_net_capacitance = 0
             return
 
         for name, input_pin in pins.items():
             if name != 'Y' and name != 'Q':
                 self.input_pins[name] = Pin(input_pin, name)
 
-        self.output_net_capacitance = 0.04  # assumption
+        # self.output_net_capacitance = 0.4          #every node will update its inputs
+
         if 'Y' in pins.keys():
             self.output_pins = Pin(pins['Y'], 'Y', type='output')
         elif 'Q' in pins.keys():
             self.output_pins = Pin(pins['Q'], 'Q', type='output')
         self.delay = None
         self.output_transition = None
+
+
 
     def handle_ff(self,ff_info):
         if self.type == 'DFFPOSX1':
@@ -61,8 +65,27 @@ class Node:
                   for y in ff_info['hold_rise']['x_values']]for x in ff_info['hold_rise']['y_values']]
         hold = interpolate.interp2d(ff_info['hold_rise']['x_values'], ff_info['hold_rise']['y_values'],
                                  hold, bounds_error=False, copy=False)
-
         self.hold = -hold(self.graph.get_node(self.input_pins['D'].connected_to).get_out_transition(),self.skew)[0]
+
+
+    def get_out_capacitance(self):
+        # print(self.graph.connections)
+        if self.cap:
+            return self.cap
+        if self.index not in self.graph.connections.keys():
+            final = list(self.graph.wire_capacitances[self.index].keys())[0]
+
+            return self.graph.wire_capacitances[self.index][final] + 0.09
+
+        for node,pin in self.graph.connections[self.index].items():
+            # if self.graph.types[node] == 'output':
+            #     cap = self.graph.wire_capacitances[self.index][node]
+            #     return cap
+            self.cap = self.cap + self.graph.gates[node].input_pins[pin].pin_capacitance + \
+                  self.graph.wire_capacitances[self.index][node]
+        # print(self.name, '----------------', cap)
+        return self.cap
+
 
     def get_out_transition(self):
         if self.output_transition is not None:
@@ -73,12 +96,13 @@ class Node:
             #     self.output_net_capacitance + pin.pin_capacitance, self.graph.get_node(pin.connected_to).get_out_transition()) )
             if name != 'D':
                 self.output_transition = max(self.output_transition, pin.get_output_transition(
-                    self.output_net_capacitance + pin.pin_capacitance,
+                    self.get_out_capacitance(),
                     self.graph.get_node(pin.connected_to).get_out_transition()))
         return self.output_transition
 
 
     def get_delay(self):
+        # print(self.graph.connections)
         if self.delay is not None:
             return self.delay
         self.delay = -99999999999
@@ -86,7 +110,7 @@ class Node:
             # print('delay' ,self.index, name,pin.get_delay(self.output_net_capacitance+ pin.pin_capacitance,
             #                                        self.graph.get_node(pin.connected_to).get_out_transition()))
             if name != 'D':
-                self.delay = max(self.delay, pin.get_delay(self.output_net_capacitance + pin.pin_capacitance,
+                self.delay = max(self.delay, pin.get_delay(self.get_out_capacitance(),
                                                        self.graph.get_node(pin.connected_to).get_out_transition()))
         return self.delay
 

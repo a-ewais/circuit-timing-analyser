@@ -1,0 +1,38 @@
+=================================
+==STATIC TIMING ANALYSIS REPORT==
+=================================
+
+TIMING PATHS
+============
+Register to Output Paths
+------------------------
+None Found
+
+Register to Register Paths
+--------------------------
+[[12, 13, 14, 7]]
+
+Input to Register Paths
+-----------------------
+[[2, 12], [2, 7], [3, 8, 10, 12], [3, 9, 10, 12], [4, 8, 10, 12], [4, 9, 10, 12], [5, 13, 14, 7], [6, 11, 14, 7]]
+
+Input to Output Paths
+---------------------
+None Found
+
+CRITICAL PATH
+=============
+Path: [3, 8, 10, 12]
+Delay: 2.768
+Type: Input to Register Path
+Minimum clock cycle should be: 2.768 ps
+
+----------------------------------------------------
+Pin	type		Incr		Path delay
+----------------------------------------------------
+3	input		2.8		2.8
+8	NOR2X1		0.377		3.177
+10	NOR2X1		0.284		3.462
+12	DFFPOSX1		0.378		3.84
+----------------------------------------------------
+Data Arrival Time			3.84

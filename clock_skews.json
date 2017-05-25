@@ -18,8 +18,8 @@
     },
     "num_9": {
       "clock_skew": {
-        "DFFPOSX1_7": 0.5,
-        "DFFPOSX1_12": 0.6
+        "DFFPOSX1_7": 1.0,
+        "DFFPOSX1_12": 1.0
       }
     },
     "num_10": {

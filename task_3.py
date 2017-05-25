@@ -1,7 +1,7 @@
 import numpy as np
 import json
 from node import Node
-
+import random
 
 # class path:
 #     def __init__(self,graph):
@@ -16,14 +16,13 @@ class Graph:
     gates = {}  # dictionary with node objects describing the graph
     module_name = ''
     timing_constraints = {}
-
+    critical_path = []
     def __init__(self, circuit_file, output_file=None,
                  library_file='osu350.json', constraints_file='./timing_constraints.json',
                  skews_file ='./clock_skews.json'):
         self.adj, self.types, Gates = self.__build_graph(circuit_file)
         capacitances, flip_flops = self.__read_library(library_file)
         self.timing_constraints = self.__get_constraints(constraints_file)
-
 
         print(self.types)
         print(self.adj)
@@ -79,7 +78,16 @@ class Graph:
             if name != 0 and str(name) not in self.gates:
                 self.gates[str(name)] = Node(str(name), 'input', None, self)
         self.skews = self.__get_skews(skews_file)
-        # print(self.types)
+        # self.write_wire_capacitances()
+        self.wire_capacitances = self.read_wire_capacitances()
+        self.connections = {}
+        for gate in self.gates.values():
+            for name,pin in gate.input_pins.items():
+                if pin.connected_to not in self.connections.keys():
+                    self.connections[pin.connected_to] = {}
+                self.connections[pin.connected_to][gate.index] = name
+
+
         ff_info = {
             'hold_rise': flip_flops['hold']['DFFPOSX1']['hold_rising']['rise_constraint'],
             'hold_fall': flip_flops['hold']['DFFPOSX1']['hold_rising']['fall_constraint'],
@@ -389,6 +397,10 @@ class Graph:
         return self.gates[index]
 
     def get_critical_path(self):
+        if self.critical_path:
+            return self.critical_path, self.critical_delay, self.critical_type
+        print(self.paths)
+        type = ''
         mx = 0
         mx_index = 0
         for path in self.paths['ito']:
@@ -401,11 +413,54 @@ class Graph:
             if (sum > mx):
                 mx = sum
                 mx_index = path
-        print(self.paths)
+                type = 'Input to Output Path'
+
         for path in self.paths['ftf']:
-            print(path)
+            tpd = 0
+            for i in path:
+                gate = self.get_node(i)
+                if gate.type != 'DFFPOSX1':
+                    tpd = tpd + gate.get_delay()
+            end_node = self.get_node(path[-1])
+            start_node = self.get_node(path[0])
+            sum = tpd + start_node.get_delay() + start_node.skew + end_node.setup - end_node.skew
+            if (sum > mx):
+                mx = sum
+                mx_index = path
+                type = 'Register to Register Path'
             self.__inspect_ff_path(path)
-        return mx_index, mx
+
+        for path in self.paths['itf']:
+            path.pop(0)
+            tpd = 0
+            for i in path:
+                gate = self.get_node(i)
+                if gate.type != 'DFFPOSX1':
+                    tpd = tpd + gate.get_delay()
+            end_node = self.get_node(path[-1])
+            sum = tpd + end_node.setup - end_node.skew
+            if (sum > mx):
+                mx = sum
+                mx_index = path
+                type = 'Input to Register Path'
+
+        for path in self.paths['fto']:
+            path.pop()
+            tpd = 0
+            for i in path:
+                gate = self.get_node(i)
+                tpd = tpd + gate.get_delay()
+            tpd = tpd + self.timing_constraints['output_delay']
+            sum = tpd + end_node.setup - end_node.skew
+            if (sum > mx):
+                mx = sum
+                mx_index = path
+                type = 'Register to Output Path'
+
+        self.critical_path = mx_index
+        self.critical_delay = mx
+        self.critical_type = type
+        return mx_index, mx ,type
 
 
     def __inspect_ff_path(self,path):
@@ -416,8 +471,8 @@ class Graph:
                 tpd = tpd + gate.get_delay()
         end_node = self.get_node(path[-1])
         start_node = self.get_node(path[0])
-        setup,hold,slack = end_node.check_constraints(tpd,start_node.get_delay(),start_node.skew)
-        print(slack)
+        hold,setup,slack = end_node.check_constraints(tpd,start_node.get_delay(),start_node.skew)
+        print(setup,hold,slack)
         if hold:
             print('==========================================')
             print('hold time violation in FF_FF path:')
@@ -449,7 +504,6 @@ class Graph:
         if index not in self.adj.keys():
             return
         for i in self.adj[index]:
-            print(int(i))
             self.dfs_arr(int(i),val+delay)
 
 
@@ -466,7 +520,7 @@ class Graph:
         self.dfs_req(end,self.timing_constraints['clock_period'] - self.timing_constraints['output_delay'])
         for gate in self.gates.values():
             gate.slack = gate.required-gate.arrival
-            print(gate.name,gate.arrival,gate.required,gate.slack)
+            # print(gate.name,gate.arrival,gate.required,gate.slack)
 
     def __get_skews(self, json_file='./clock_skews.json'):
         data = json.loads(open(json_file).read())
@@ -486,5 +540,22 @@ class Graph:
         timing_constraints['input_delay'] = data['modules'][self.module_name]['input_delay']
         timing_constraints['output_delay'] = data['modules'][self.module_name]['output_delay']
         timing_constraints['clock_period'] = data['modules'][self.module_name]['clock_period']
-
         return timing_constraints
+
+
+    def read_wire_capacitances(self):
+        file_name = self.module_name + '_wire_capacitances' + '.json'
+        data = json.loads(open(file_name).read())
+        print(data)
+        return data
+
+    def write_wire_capacitances(self):
+        temp = {}
+        for index,arr in self.adj.items():
+            temp[index] = {}
+            for i in arr:
+                temp[index][int(i)] = random.uniform(0.02,0.1)
+
+        file_name = self.module_name + '_wire_capacitances' + '.json'
+        with open(file_name , 'w') as outfile:
+            json.dump(temp,outfile)
