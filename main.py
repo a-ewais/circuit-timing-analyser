@@ -1,7 +1,7 @@
 from task_3 import Graph
 # import pygraphviz as pgv
 
-graph = Graph('./Gatlevel_Netlists/num_12.json')
+graph = Graph('./Gatlevel_Netlists/num_9.json')
 
 # cp, time = graph.get_critical_path()
 # print('critical_path = ',cp, time)

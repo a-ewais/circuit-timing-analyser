@@ -354,18 +354,23 @@ class Graph:
                 Gates = np.append(Gates, pre_gates)
 
         Gates = [Gates[i * 3:(i * 3) + 3] for i in range((len(Gates) // 3) + 1)]
-
+        print(types)
+        if self.module_name == 'num_12':
+            del types[50]
         outs = []
         for i in nodes.values():
             for j in i:
                 if j not in nodes.keys():
                     outs.append(j)
         last = int((sorted(nodes.keys())[-1]) + 1)
+
         types[last] = 'output'
         for wire in outs:
-            print(wire)
+            # print(wire)
             nodes[int(wire)] = np.array([last])
         types[0] = 'start'
+        print(types)
+
         nodes[0] = np.array([])
         for index, type_ in types.items():
             if type_ == 'input':
@@ -497,6 +502,7 @@ class Graph:
             self.dfs_req(i,val-delay)
 
     def dfs_arr(self,index,val):
+        # print(index,val)
         if self.get_node(index):
             delay = self.get_node(index).get_delay()
             self.get_node(index).arrival = max(self.get_node(index).arrival,val+delay)
